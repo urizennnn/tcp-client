@@ -11,7 +11,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut buffer = vec![0; 1024];
 
     loop {
-        print!("Enter command (LIST, GET <filename>, PUT <filename>, or EXIT): ");
+        print!("Enter command (LIST, GET <filename>, PUT <filename> DELETE <filename>, or EXIT): ");
         io::stdout().flush()?;
 
         let mut input = String::new();
