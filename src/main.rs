@@ -11,35 +11,35 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut buffer = vec![0; 1024];
 
     loop {
-        // Display prompt to the user
         print!("Enter command (LIST, GET <filename>, PUT <filename>, or EXIT): ");
         io::stdout().flush()?;
 
-        // Read user input
         let mut input = String::new();
         io::stdin().lock().read_line(&mut input)?;
         let input = input.trim().to_string();
 
         if input == "EXIT" {
+            println!("Exiting...");
             break;
         }
 
-        // Send user input to the server
-        stream.write_all(input.as_bytes()).await?;
-        stream.write_all(b"\n").await?;
+        if let Err(e) = stream.write_all(input.as_bytes()).await {
+            eprintln!("Failed to send command to server: {}", e);
+            continue;
+        }
 
-        // Read response from the server after sending the command
         match stream.read(&mut buffer).await {
             Ok(n) if n > 0 => {
-                println!("Server response: {}", String::from_utf8_lossy(&buffer[..n]));
+                let response = String::from_utf8_lossy(&buffer[..n]);
+                println!("Server response: {}", response);
             }
             Ok(_) => {
                 println!("Connection closed by server");
                 break;
             }
             Err(e) => {
-                eprintln!("Failed to read from server: {:?}", e);
-                return Err(e.into());
+                eprintln!("Failed to read from server: {}", e);
+                break;
             }
         }
     }
