@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::io::{self, BufRead, Write};
+use tcp_client::init;
 use tcp_client::methods::upload::upload;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
@@ -8,6 +9,7 @@ use tokio::net::TcpStream;
 async fn main() -> Result<(), Box<dyn Error>> {
     let mut stream = TcpStream::connect("localhost:8080").await?;
     println!("Connected to server");
+    init::init().await?;
     let mut buffer = vec![0; 5_242_880];
 
     loop {
@@ -34,24 +36,30 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 stream.flush().await?;
                 upload(&mut stream, parts[1], &mut buffer).await?;
             }
-            _ => {
-                stream.write_all(b"\n").await?;
+            Some("LIST") | Some("GET") | Some("DELETE") => {
+                stream.write_all(input.as_bytes()).await?;
                 stream.flush().await?;
-            }
-        }
 
-        match stream.read(&mut buffer).await {
-            Ok(n) if n > 0 => {
-                let response = String::from_utf8_lossy(&buffer[..n]);
-                println!("Server response: {}", response);
+                let mut full_response = String::new();
+                loop {
+                    match stream.read(&mut buffer).await {
+                        Ok(0) => break, // Connection closed
+                        Ok(n) => {
+                            full_response.push_str(&String::from_utf8_lossy(&buffer[..n]));
+                            if n < buffer.len() {
+                                break;
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!("Failed to read from server: {}", e);
+                            return Err(e.into());
+                        }
+                    }
+                }
+                println!("Server response:\n{}", full_response.trim());
             }
-            Ok(_) => {
-                println!("Connection closed by server");
-                break;
-            }
-            Err(e) => {
-                eprintln!("Failed to read from server: {}", e);
-                break;
+            _ => {
+                println!("Invalid command. Please try again.");
             }
         }
     }
