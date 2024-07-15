@@ -6,7 +6,7 @@ use tokio::net::TcpStream;
 pub async fn upload(
     stream: &mut TcpStream,
     path: &str,
-    buffer: &mut Vec<u8>,
+    buffer: &mut [u8],
 ) -> Result<(), Box<dyn Error>> {
     let mut file = File::open(path).await?;
     println!("File opened: {}", path);
