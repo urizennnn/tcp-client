@@ -6,7 +6,7 @@ use std::{
     io::{self, BufRead, Write},
 };
 use tcp_client::{
-    init,
+    init::{self, update_init},
     methods::{get::receive_files, list::list, upload::upload},
 };
 use tokio::{io::AsyncReadExt, io::AsyncWriteExt, net::TcpStream};
@@ -46,6 +46,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 }
                 stream.write_all(input.as_bytes()).await?;
                 stream.flush().await?;
+                update_init(parts[1].to_string()).await?;
                 upload(&mut stream, parts[1], &mut buffer).await?;
             }
             Some("LIST") => {
