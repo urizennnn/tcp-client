@@ -1,4 +1,5 @@
 use chrono::prelude::*;
+use log::warn;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 use tokio::fs::{create_dir_all, File};
@@ -35,9 +36,11 @@ pub async fn init() -> Result<String, Box<dyn Error>> {
 
         Ok(tcp_client_dir.to_string_lossy().into_owned())
     } else {
+        warn!("Config directory not found");
         Err("Config directory not found".into())
     }
 }
+
 // TODO: Make the files array update when the user uploads a file, and update the last_active field
 // as soon as user inits a new session.
 pub async fn update_init() {
