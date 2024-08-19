@@ -11,7 +11,6 @@ pub async fn upload(
 ) -> Result<(), Box<dyn Error>> {
     let mut file = File::open(path).await?;
     info!("File opened: {}", path);
-
     let file_size = file.metadata().await?.len();
     stream
         .write_all(format!("UPLOAD {} {}\n", path, file_size).as_bytes())

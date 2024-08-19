@@ -17,7 +17,7 @@ pub static USER: Lazy<String> = Lazy::new(|| username().to_string());
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     SimpleLogger::new().init().unwrap();
-    let mut stream = TcpStream::connect("localhost:8080").await?;
+    let mut stream = TcpStream::connect("localhost:8019").await?;
     stream.write_all(USER.as_bytes()).await?;
     stream.flush().await?;
     info!("Connected to server");
